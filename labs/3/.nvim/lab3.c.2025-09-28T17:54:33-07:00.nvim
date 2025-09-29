@@ -5,11 +5,10 @@
 
 #define HISTORY_SIZE 5
 
-// helper function that removes any newline or return characters at the end of
-// an input string
+//helper function that removes any newline or return characters at the end of an input string
 static void trim_newLine(char *s) {
   size_t len = strlen(s);
-  if (!s) {
+  if (!s){
     return;
   }
 
@@ -22,7 +21,7 @@ static void trim_newLine(char *s) {
 static void add_history(char *history[], int *start, int *count, char *line) {
   // start -> index of the oldest entry
   // count -> number of entries stored
-  // line -> newly entered string
+  // line -> newly entered string 
 
   // if we're not full yet just appent at the position of (start + count)
   if (*count < HISTORY_SIZE) {
@@ -33,18 +32,18 @@ static void add_history(char *history[], int *start, int *count, char *line) {
 
   } else {
 
-    // if we are full, disallocate the oldest entry and overwrite it
-    // move start pointer as required of a circular array
-
+    //if we are full, disallocate the oldest entry and overwrite it
+    //move start pointer as required of a circular array
+    
     free(history[*start]);
     history[*start] = line;
     *start = (*start + 1) % HISTORY_SIZE;
+
   }
 }
 
 // helper function that prints the stored lines of history
-// iterates over the buffer using the start pointer and prints 'count' many
-// entries
+// iterates over the buffer using the start pointer and prints 'count' many entries
 static void print_history(char *history[], int start, int count) {
 
   for (int i = 0; i < count; ++i) {
@@ -52,29 +51,28 @@ static void print_history(char *history[], int start, int count) {
 
     printf("%s\n", history[idx]);
   }
+
 }
 
 int main(void) {
-  // we set the history buffer to store HISTORY_SIZE many strings
+  //we set the history buffer to store HISTORY_SIZE many strings
   char *history[HISTORY_SIZE] = {0};
-  int start = 0; // index of oldest
-  int count =
-      0; // number of stored entries (maximum of HISTORY_SIZE in our case 5)
+  int start = 0;  //index of oldest 
+  int count = 0;  // number of stored entries (maximum of HISTORY_SIZE in our case 5)
 
-  char *line = NULL; // buffer that is to be managed by getline
-  size_t cap = 0;    // buffer capacity
-  ssize_t nread;     // number of chars read
+  char *line = NULL;   //buffer that is to be managed by getline
+  size_t cap = 0; //buffer capacity
+  ssize_t nread;  //number of chars read
 
   while (1) {
     printf("Enter input: ");
     fflush(stdout);
 
-    // allocates 'line' as needed to read a full line
+    //allocates 'line' as needed to read a full line
     nread = getline(&line, &cap, stdin);
 
     if (nread == -1) {
-      //-1 either means we hit EOF or encountered an error so we print errors
-      //accordingly
+      //-1 either means we hit EOF or encountered an error so we print errors accordingly
       if (feof(stdin)) {
 
         printf("\n(EOF)\n");
@@ -82,31 +80,32 @@ int main(void) {
       } else {
 
         perror("getline");
+
       }
-      // exit the loop if we encounter EOF or error
+      //exit the loop if we encounter EOF or error
       break;
     }
 
     trim_newLine(line);
 
-    // we make a copy of the input string right now cause 'line' is gonna be
-    // used later for the next getline call
+    //we make a copy of the input string right now cause 'line' is gonna be used later
+    //for the next getline call
     char *temp = strdup(line);
     if (!temp) {
       perror("strdup");
       break;
     }
 
-    // add this copy into the history buffer
+    //add this copy into the history buffer
     add_history(history, &start, &count, temp);
 
-    // if the user inputted "print" we run the display history function
+    //if the user inputted "print" we run the display history function
     if (strcmp(line, "print") == 0) {
       print_history(history, start, count);
     }
   }
 
-  // freeing getline buffer and all history strings as a cleanup procedure
+  //freeing getline buffer and all history strings as a cleanup procedure
   free(line);
   for (int i = 0; i < HISTORY_SIZE; ++i) {
     free(history[i]);
