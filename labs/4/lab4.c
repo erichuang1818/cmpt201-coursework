@@ -59,7 +59,6 @@ int main() {
   print_out("second block:      %p\n", &second_block, sizeof(void *));
 
   // print out headers
-
   print_out("first block size:  %lu\n", &(first_block->size), sizeof(uint64_t));
   print_out("first block next:  %p\n", &(first_block->next), sizeof(void *));
   print_out("second block size: %lu\n", &(second_block->size),
@@ -68,12 +67,12 @@ int main() {
 
   // print out all the contents fo the first block
   for (size_t i = 0; i < data_size; i++) {
-    print_out("%d\n", &first_data[i], sizeof(uint64_t));
+    print_out("%d\n", &first_data[i], sizeof(char));
   }
 
   // print out data contents of the second block
   for (size_t i = 0; i < data_size; i++) {
-    print_out("%d\n", &second_data[i], sizeof(uint64_t));
+    print_out("%d\n", &second_data[i], sizeof(char));
   }
 
   return 0;
