@@ -1,0 +1,80 @@
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#define _POSIX_C_SOURCE 200809L
+
+#define BUF_SIZE 256
+#define EXTRA_SIZE 256
+#define BLOCK_SIZE 128
+
+struct header {
+  uint64_t size;
+  struct header *next;
+};
+
+void print_out(char *format, void *data, size_t data_size) {
+  char buf[BUF_SIZE];
+  ssize_t len;
+  if (data_size == sizeof(uint64_t)) {
+    len = snprintf(buf, BUF_SIZE, format, *(uint64_t *)data);
+  } else if (data_size == sizeof(char)) {
+    len = snprintf(buf, BUF_SIZE, format, *(unsigned char *)data);
+  } else {
+    len = snprintf(buf, BUF_SIZE, format, *(void **)data);
+  }
+  write(STDOUT_FILENO, buf, len);
+}
+
+int main() {
+  // plug up the heap size with 256 bytes
+  void *heap_start = sbrk(EXTRA_SIZE);
+
+  // create two memory blocks with 128 bytes
+  struct header *first_block = (struct header *)heap_start;
+  struct header *second_block =
+      (struct header *)((char *)heap_start + BLOCK_SIZE);
+
+  // initialize the headers
+  first_block->size = BLOCK_SIZE;
+  first_block->next = NULL;
+
+  second_block->size = BLOCK_SIZE;
+  second_block->next = first_block;
+
+  // initialize the data portion of the memory blocks (after headers)
+  // init to 0
+  char *first_data = (char *)first_block + sizeof(struct header);
+  size_t data_size = BLOCK_SIZE - sizeof(struct header);
+  memset(first_data, 0, data_size);
+
+  // init to 1
+  char *second_data = (char *)second_block + sizeof(struct header);
+  memset(second_data, 1, data_size);
+
+  // print addresses
+  print_out("first block:       %p\n", &first_block, sizeof(void *));
+  print_out("second block:      %p\n", &second_block, sizeof(void *));
+
+  // print out headers
+
+  print_out("first block size:  %lu\n", &(first_block->size), sizeof(uint64_t));
+  print_out("first block next:  %p\n", &(first_block->next), sizeof(void *));
+  print_out("second block size: %lu\n", &(second_block->size),
+            sizeof(uint64_t));
+  print_out("second block next: %p\n", &(second_block->next), sizeof(void *));
+
+  // print out all the contents fo the first block
+  for (size_t i = 0; i < data_size; i++) {
+    print_out("%d\n", &first_data[i], sizeof(uint64_t));
+  }
+
+  // print out data contents of the second block
+  for (size_t i = 0; i < data_size; i++) {
+    print_out("%d\n", &second_data[i], sizeof(uint64_t));
+  }
+
+  return 0;
+}
