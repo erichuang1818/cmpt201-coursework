@@ -1,0 +1,24 @@
+#include <stdio.h>
+#include <pthread.h>
+
+// function pointer tha tthe thread calls 
+void *slave(void* arg){
+  char* name = (char*)arg;
+  printf("hello vro...%s\n", name);
+  return NULL;
+}
+
+
+int main(){
+  char* msg = "Thread-1";
+
+  //thread id
+  pthread_t tid;
+  pthread_create(&tid,NULL, slave, msg);
+  
+
+  //wait until 
+  pthread_join(tid, NULL);
+
+  return 0;
+}

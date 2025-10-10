@@ -1,0 +1,28 @@
+#include <pthread.h>
+#include <stdio.h>
+
+// function pointer tha tthe thread calls
+void *slave(void *arg) {
+  char *str = (char *)arg;
+  pthread_t tid = pthread_self();
+  printf("hello there", tid, str);
+}
+
+int main() {
+  char *msg = "main thread here!\n";
+
+  // thread id
+  pthread_t tid;
+  char *input;
+  pthread_create(&tid, NULL, , msg);
+  void *retVal;
+
+  pthread_join(tid, &retVal);
+  int *length_of_id = (int*)retVal;
+  printf("length = %d\n", tid, *length_of_id);
+
+  pthread_exit(NULL);
+  pthread_detach(tid);
+
+  return 0;
+}
