@@ -9,21 +9,25 @@
 
 // history buffer
 static char history[HISTORY_SIZE][MAX_CMD_LEN];
+// parallel array to store command numbers
+static int history_num[HISTORY_SIZE];
+
 // number of commands in history
 static int history_count = 0;
 // index in the circular array buffer where the next would be stored
 static int history_index = 0;
 // number of valid entries in history
-static int history_stored = 0;
+static int next_cmd_num = 0;
 
 void hist_init() {
   for (int i = 0; i < HISTORY_SIZE; i++) {
     // everything is empty at first
     history[i][0] = '\0';
+    history_num[i] = -1;
   }
   history_count = 0;
   history_index = 0;
-  history_stored = 0;
+  next_cmd_num = 0;
 }
 
 void hist_add(const char *cmd) {
@@ -38,6 +42,7 @@ void hist_add(const char *cmd) {
   // copies the command into the circlar history buffer
   memcpy(history[history_index], cmd, len);
   history[history_index][len] = '\0';
+  history_num[history_index] = next_cmd_num++;
 
   // moves the pointer in accordance to circular buffer
   history_index = (history_index + 1) % HISTORY_SIZE;
@@ -45,7 +50,6 @@ void hist_add(const char *cmd) {
   if (history_count < HISTORY_SIZE) {
     history_count++;
   }
-  history_stored++;
 }
 
 void hist_print() {
@@ -78,29 +82,22 @@ void hist_print() {
   }
 }
 
-const char *hist_index(int index) {
+const char *hist_recent() {
   if (history_count == 0)
     return NULL;
 
-  int newest = history_stored - 1;
-  int oldest = history_stored - history_count;
-
-  if (index < oldest || index > newest) {
-    return NULL;
-  }
-
-  int offset_from_newest = newest - index;
-  int idx =
-      (history_index - 1 - offset_from_newest + HISTORY_SIZE) % HISTORY_SIZE;
+  int idx = (history_index - 1 + HISTORY_SIZE) % HISTORY_SIZE;
   return history[idx];
 }
 
-const char *hist_recent() {
-  if (history_stored == 0) {
-    return NULL;
+const char *hist_index(int index) {
+  for (int i = 0; i < history_count; i++) {
+    int idx = (history_index - 1 - i + HISTORY_SIZE) % HISTORY_SIZE;
+    if (history_num[idx] == index) {
+      return history[idx];
+    }
   }
-  int idx = (history_index - 1 + HISTORY_SIZE) % HISTORY_SIZE;
-  return history[idx];
+  return NULL;
 }
 
 int hist_count() { return history_count; }

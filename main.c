@@ -57,35 +57,107 @@ int main() {
     case INTERNAL_CMD:
       // internal handler
       internal_handle(argv);
-      continue;
+      break;
 
     case HISTORY_CMD:
       // history handler
       if (strcmp(argv[0], "history") == 0) {
-        /*
         hist_print();
 
       } else if (strcmp(argv[0], "!!") == 0) {
-
         const char *cmd = hist_recent();
-
-        if(!cmd){
+        if (!cmd) {
           write(STDERR_FILENO, "history: ", 9);
           write(STDERR_FILENO, HISTORY_NO_LAST_MSG,
-      strlen(HISTORY_INVALID_MSG)); write(STDERR_FILENO, "\n", 1); break;
+                strlen(HISTORY_INVALID_MSG));
+          write(STDERR_FILENO, "\n", 1);
+          break;
         }
         write(STDOUT_FILENO, cmd, strlen(cmd));
         write(STDOUT_FILENO, "\n", 1);
 
-        */
+        strncpy(buffer, cmd, BUFFER_SIZE - 1);
+        buffer[BUFFER_SIZE - 1] = '\0';
+        bg = 0;
+        argc = 0;
+        saveptr = NULL;
+        token = strtok_r(buffer, " \t", &saveptr);
+        while (token) {
+          if (strcmp(token, "&") == 0) {
+            bg = 1;
+            break;
+          }
+
+          argv[argc++] = token;
+          token = strtok_r(NULL, " \t", &saveptr);
+        }
+        argv[argc] = NULL;
+        hist_add(cmd);
+        type = get_command_type(argv);
+        if (type == INTERNAL_CMD)
+          internal_handle(argv);
+        else if (type == EXTERNAL_CMD)
+          external_handle(argv, bg);
+
       } else if (argv[0][0] == '!') {
+        char *num_str = argv[0] + 1;
+        if (*num_str == '\0') {
+          write(STDERR_FILENO, "history: ", 9);
+          write(STDERR_FILENO, HISTORY_INVALID_MSG,
+                strlen(HISTORY_INVALID_MSG));
+          write(STDERR_FILENO, "\n", 1);
+          break;
+        }
+
+        char *endptr;
+        int num = strtol(num_str, &endptr, 10);
+        if (*endptr != '\0') {
+          write(STDERR_FILENO, "history: ", 9);
+          write(STDERR_FILENO, HISTORY_INVALID_MSG,
+                strlen(HISTORY_INVALID_MSG));
+          write(STDERR_FILENO, "\n", 1);
+          break;
+        }
+
+        const char *cmd = hist_index(num);
+        if (!cmd) {
+          write(STDERR_FILENO, "history: ", 9);
+          write(STDERR_FILENO, HISTORY_INVALID_MSG,
+                strlen(HISTORY_INVALID_MSG));
+          write(STDERR_FILENO, "\n", 1);
+          break;
+        }
+        write(STDOUT_FILENO, cmd, strlen(cmd));
+        write(STDOUT_FILENO, "\n", 1);
+        strncpy(buffer, cmd, BUFFER_SIZE - 1);
+        buffer[BUFFER_SIZE - 1] = '\0';
+        bg = 0;
+        argc = 0;
+        saveptr = NULL;
+        token = strtok_r(buffer, " \t", &saveptr);
+        while (token) {
+          if (strcmp(token, "&") == 0) {
+            bg = 1;
+            break;
+          }
+
+          argv[argc++] = token;
+          token = strtok_r(NULL, " \t", &saveptr);
+        }
+        argv[argc] = NULL;
+        hist_add(cmd);
+        type = get_command_type(argv);
+        if (type == INTERNAL_CMD)
+          internal_handle(argv);
+        else if (type == EXTERNAL_CMD)
+          external_handle(argv, bg);
       }
-      continue;
+      break;
 
     case EXTERNAL_CMD:
       // external handler
       external_handle(argv, bg);
-      continue;
+      break;
 
     default:
       break;
