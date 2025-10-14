@@ -43,7 +43,7 @@ void internal_handle(char **argv) {
       write(STDERR_FILENO, "\n", 1);
     }
     ////////////////////////////////////////////////////////////////////////////////////////////
-    // CD HANDLER (FIX ME FIX ME)
+    // CD HANDLER
   } else if (strcmp(argv[0], "cd") == 0) {
     static char prev_dir[1024] = "";
     char cwd[1024];
@@ -74,13 +74,14 @@ void internal_handle(char **argv) {
           home = pw->pw_dir;
       }
       if (!home || chdir(home) != 0) {
-        write(STDERR_FILENO, "ch: ", 4);
+        write(STDERR_FILENO, "cd: ", 4);
         write(STDERR_FILENO, CHDIR_ERROR_MSG, strlen(CHDIR_ERROR_MSG));
         write(STDERR_FILENO, "\n", 1);
         return;
       }
     }
 
+    // GO HOME WITH ~
     else if (target[0] == '~') {
       const char *home = getenv("HOME");
       if (!home) {
@@ -89,7 +90,7 @@ void internal_handle(char **argv) {
           home = pw->pw_dir;
       }
       if (!home) {
-        write(STDERR_FILENO, "ch: ", 4);
+        write(STDERR_FILENO, "cd: ", 4);
         write(STDERR_FILENO, CHDIR_ERROR_MSG, strlen(CHDIR_ERROR_MSG));
         write(STDERR_FILENO, "\n", 1);
         return;
@@ -99,7 +100,7 @@ void internal_handle(char **argv) {
       size_t home_len = strlen(home);
       size_t extra_len = strlen(target + 1);
       if (home_len + extra_len >= sizeof(full_path)) {
-        write(STDERR_FILENO, "ch: ", 4);
+        write(STDERR_FILENO, "cd: ", 4);
         write(STDERR_FILENO, CHDIR_ERROR_MSG, strlen(CHDIR_ERROR_MSG));
         write(STDERR_FILENO, "\n", 1);
         return;
@@ -109,13 +110,14 @@ void internal_handle(char **argv) {
       memcpy(full_path + home_len, target + 1, extra_len + 1);
 
       if (chdir(full_path) != 0) {
-        write(STDERR_FILENO, "ch: ", 4);
+        write(STDERR_FILENO, "cd: ", 4);
         write(STDERR_FILENO, CHDIR_ERROR_MSG, strlen(CHDIR_ERROR_MSG));
         write(STDERR_FILENO, "\n", 1);
         return;
       }
     }
 
+    // GO HOME WITH -
     else if (strcmp(target, "-") == 0) {
       if (prev_dir[0] == '\0') {
         const char *home = getenv("HOME");
@@ -125,7 +127,7 @@ void internal_handle(char **argv) {
             home = pw->pw_dir;
         }
         if (!home || chdir(home) != 0) {
-          write(STDERR_FILENO, "ch: ", 4);
+          write(STDERR_FILENO, "cd: ", 4);
           write(STDERR_FILENO, CHDIR_ERROR_MSG, strlen(CHDIR_ERROR_MSG));
           write(STDERR_FILENO, "\n", 1);
           return;
@@ -137,7 +139,7 @@ void internal_handle(char **argv) {
         strcpy(temp, cwd);
 
         if (chdir(prev_dir) != 0) {
-          write(STDERR_FILENO, "ch: ", 4);
+          write(STDERR_FILENO, "cd: ", 4);
           write(STDERR_FILENO, CHDIR_ERROR_MSG, strlen(CHDIR_ERROR_MSG));
           write(STDERR_FILENO, "\n", 1);
           return;
@@ -146,11 +148,11 @@ void internal_handle(char **argv) {
         return;
       }
     } else {
+      // STANDARD CD
       if (chdir(target) != 0) {
-        write(STDERR_FILENO, "ch: ", 4);
+        write(STDERR_FILENO, "cd: ", 4);
         write(STDERR_FILENO, CHDIR_ERROR_MSG, strlen(CHDIR_ERROR_MSG));
         write(STDERR_FILENO, "\n", 1);
-        return;
       }
     }
     strcpy(prev_dir, cwd);
@@ -223,7 +225,7 @@ void external_handle(char **argv, int bg) {
   pid_t pid = fork();
 
   if (pid == -1) {
-    write(STDERR_FILENO, "fork: ", 6);
+    write(STDERR_FILENO, "shell: ", 7);
     write(STDERR_FILENO, FORK_ERROR_MSG, strlen(FORK_ERROR_MSG));
     write(STDERR_FILENO, "\n", 1);
     return;
@@ -231,17 +233,24 @@ void external_handle(char **argv, int bg) {
 
   if (pid == 0) {
     if (execvpe(argv[0], argv, environ) == -1) {
-      write(STDERR_FILENO, "exec: ", 6);
+      write(STDERR_FILENO, "shell: ", 7);
       write(STDERR_FILENO, EXEC_ERROR_MSG, strlen(EXEC_ERROR_MSG));
       write(STDERR_FILENO, "\n", 1);
-    } else {
       if (!bg) {
         if (waitpid(pid, NULL, 0)) {
-          write(STDERR_FILENO, "wait: ", 6);
+          write(STDERR_FILENO, "shell: ", 7);
           write(STDERR_FILENO, WAIT_ERROR_MSG, strlen(EXEC_ERROR_MSG));
           write(STDERR_FILENO, "\n", 1);
         }
       }
     }
+  }
+}
+
+void zombie_reaper() {
+  int status;
+  pid_t pid;
+
+  while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
   }
 }
