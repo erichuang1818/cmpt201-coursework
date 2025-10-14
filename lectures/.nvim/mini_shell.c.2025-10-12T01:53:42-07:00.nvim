@@ -1,0 +1,28 @@
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+#define BUFFER_SIZE 2014
+
+int main() {
+  while (1) {
+    char cwd[BUFFER_SIZE];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+      printf("%s\n", cwd);
+    } else {
+      perror("getcwd error");
+    }
+    sleep(1);
+
+    char buffer[BUFFER_SIZE];
+    ssize_t n;
+    n = read(STDIN_FILENO, buffer, sizeof(buffer) - 1);
+    if (n == -1) {
+      perror("read");
+      return 1;
+    }
+    buffer[n] = '\0';
+    printf("your input was: %s", buffer);
+  }
+
+  return 0;
+}

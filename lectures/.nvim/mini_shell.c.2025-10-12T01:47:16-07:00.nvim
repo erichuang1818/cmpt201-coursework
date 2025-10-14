@@ -1,0 +1,17 @@
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+#define BUFFER_SIZE 2014
+
+int main() {
+  while (1) {
+    char cwd[BUFFER_SIZE];
+    if(getcwd(cwd, sizeof(cwd)) != NULL){
+      printf("%s", cwd);
+    } else {
+      perror("getcwd error");
+    }
+  }
+
+  return 0;
+}

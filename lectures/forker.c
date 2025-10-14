@@ -1,0 +1,16 @@
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+int main() {
+
+  pid_t pid = fork();
+  if (pid < 0) {
+
+  } else if (pid == 0) {
+    printf("child here\n");
+    printf("my baba is...%d\n", getppid());
+  } else {
+    printf("parent here\n");
+  }
+}

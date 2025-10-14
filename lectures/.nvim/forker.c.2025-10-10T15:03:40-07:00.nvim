@@ -1,0 +1,15 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+
+int main(){
+
+  pid_t pid = fork();
+  if(pid < 0){
+
+  } else if(pid = 0){
+    printf("child here\n");
+  } else{
+    printf("parent here\n");
+  }
+}

@@ -49,17 +49,17 @@ void internal_handle(char **argv) {
     char cwd[1024];
 
     if (getcwd(cwd, sizeof(cwd)) == NULL) {
-      write(STDOUT_FILENO, "cd: ", 4);
+      write(STDERR_FILENO, "cd: ", 4);
       write(STDERR_FILENO, CHDIR_ERROR_MSG, strlen(CHDIR_ERROR_MSG));
-      write(STDOUT_FILENO, "\n", 1);
+      write(STDERR_FILENO, "\n", 1);
       return;
     }
 
     // IF THERES TOO MANY INPUTS
     if (argv[2] != NULL) {
-      write(STDOUT_FILENO, "cd: ", 4);
-      write(STDOUT_FILENO, TMA_MSG, strlen(TMA_MSG));
-      write(STDOUT_FILENO, "\n", 1);
+      write(STDERR_FILENO, "cd: ", 4);
+      write(STDERR_FILENO, TMA_MSG, strlen(TMA_MSG));
+      write(STDERR_FILENO, "\n", 1);
       return;
     }
 
@@ -231,17 +231,19 @@ void external_handle(char **argv, int bg) {
     return;
   }
 
+  // ChatGPT used to help mend some broken logic
   if (pid == 0) {
-    if (execvpe(argv[0], argv, environ) == -1) {
-      write(STDERR_FILENO, "shell: ", 7);
-      write(STDERR_FILENO, EXEC_ERROR_MSG, strlen(EXEC_ERROR_MSG));
-      write(STDERR_FILENO, "\n", 1);
-      if (!bg) {
-        if (waitpid(pid, NULL, 0)) {
-          write(STDERR_FILENO, "shell: ", 7);
-          write(STDERR_FILENO, WAIT_ERROR_MSG, strlen(EXEC_ERROR_MSG));
-          write(STDERR_FILENO, "\n", 1);
-        }
+    execvpe(argv[0], argv, environ);
+    write(STDERR_FILENO, "shell: ", 7);
+    write(STDERR_FILENO, EXEC_ERROR_MSG, strlen(EXEC_ERROR_MSG));
+    write(STDERR_FILENO, "\n", 1);
+    _exit(1);
+  } else {
+    if (!bg) {
+      if (waitpid(pid, NULL, 0) != 0) {
+        write(STDERR_FILENO, "shell: ", 7);
+        write(STDERR_FILENO, WAIT_ERROR_MSG, strlen(EXEC_ERROR_MSG));
+        write(STDERR_FILENO, "\n", 1);
       }
     }
   }

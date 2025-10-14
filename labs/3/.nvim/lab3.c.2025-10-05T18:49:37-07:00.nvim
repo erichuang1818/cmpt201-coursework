@@ -74,7 +74,7 @@ int main(void) {
 
     if (nread == -1) {
       //-1 either means we hit EOF or encountered an error so we print errors
-      // accordingly
+      //accordingly
       if (feof(stdin)) {
 
         printf("\n(EOF)\n");

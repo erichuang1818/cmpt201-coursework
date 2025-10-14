@@ -6,6 +6,7 @@
 #include "shell.h"
 #include "sighand.h"
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,7 +16,10 @@
 #define BUFFER_SIZE 1024
 
 int main() {
+  signal(SIGINT, sigint_handler);
+
   hist_init();
+
   while (1) {
 
     prompt_printer();
@@ -69,7 +73,7 @@ int main() {
         if (!cmd) {
           write(STDERR_FILENO, "history: ", 9);
           write(STDERR_FILENO, HISTORY_NO_LAST_MSG,
-                strlen(HISTORY_INVALID_MSG));
+                strlen(HISTORY_NO_LAST_MSG));
           write(STDERR_FILENO, "\n", 1);
           break;
         }
@@ -120,6 +124,7 @@ int main() {
         }
 
         const char *cmd = hist_index(num);
+
         if (!cmd) {
           write(STDERR_FILENO, "history: ", 9);
           write(STDERR_FILENO, HISTORY_INVALID_MSG,
@@ -127,14 +132,17 @@ int main() {
           write(STDERR_FILENO, "\n", 1);
           break;
         }
+
         write(STDOUT_FILENO, cmd, strlen(cmd));
         write(STDOUT_FILENO, "\n", 1);
         strncpy(buffer, cmd, BUFFER_SIZE - 1);
+
         buffer[BUFFER_SIZE - 1] = '\0';
         bg = 0;
         argc = 0;
         saveptr = NULL;
         token = strtok_r(buffer, " \t", &saveptr);
+
         while (token) {
           if (strcmp(token, "&") == 0) {
             bg = 1;
@@ -144,6 +152,7 @@ int main() {
           argv[argc++] = token;
           token = strtok_r(NULL, " \t", &saveptr);
         }
+
         argv[argc] = NULL;
         hist_add(cmd);
         type = get_command_type(argv);
@@ -162,6 +171,7 @@ int main() {
     default:
       break;
     }
+    zombie_reaper();
   }
   return 0;
 }

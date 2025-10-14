@@ -57,7 +57,7 @@ void hist_print() {
 
   for (int i = 0; i < history_count; i++) {
     int idx = (history_index - 1 - i + HISTORY_SIZE) % HISTORY_SIZE;
-    int num = history_count - 1 - i;
+    int num = history_num[idx];
 
     int n = num;
     int len = 0;
